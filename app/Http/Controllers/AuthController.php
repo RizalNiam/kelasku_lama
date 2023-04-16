@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Traits\ResponsApi;
 
 class AuthController extends Controller
 {
+    use ResponsApi;
     /**
      * Create a new AuthController instance.
      *
@@ -26,14 +28,11 @@ class AuthController extends Controller
     {
         $credentials = request(['phone', 'password']);
 
-        if (! $token = auth()->attempt($credentials)) {
+        if (! $token = auth("api")->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return response()->json([
-            "oke" => "oke"
-        ]);
-        // return $this->respondWithToken($token);
+        return $this->loginSuccess(auth("api")->user(), $token);
     }
 
     /**
