@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Traits\ResponsApi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -14,10 +16,7 @@ class AuthController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
-        $this->middleware('auth:api', ['except' => ['login']]);
-    }
+    
 
     /**
      * Get a JWT via given credentials.
@@ -35,6 +34,22 @@ class AuthController extends Controller
         return $this->loginSuccess(auth("api")->user(), $token);
     }
 
+    public function register(Request $request)
+    {
+        $input = $request->only('name', 'phone', 'school_id', 'password', 'confirm_password');
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:255',
+            'school_id' => 'required|string|max:255',
+            'password' => 'required|string|min:8|max:255',
+            'confirm_password' => 'required|string|same:password|min:8|max:255',
+        ]);
+
+        if ($validator->fails()){
+            return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
+        } 
+
+    }
     /**
      * Get the authenticated User.
      *

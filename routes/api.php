@@ -17,13 +17,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::group([
 
-    'middleware' => 'api',
+    'middleware' => 'auth.jwt',
     'prefix' => 'auth'
 
 ], function () {
-    Route::post('login', [AuthController::class,'login']);
     Route::post('logout', [AuthController::class,'logout']);
     Route::post('refresh', [AuthController::class,'refresh']);
     Route::post('me', [AuthController::class,'me']);
-
 });
+
+Route::post('auth/login', [AuthController::class,'login']);
+Route::post('auth/register', [AuthController::class,'register']);
