@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Traits\ResponsApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -47,8 +48,11 @@ class AuthController extends Controller
 
         if ($validator->fails()){
             return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
-        } 
+        }
 
+        $request['password'] = bcrypt($request['password']);
+        $user = User::create($request->all());
+        return response()->json($input);
     }
     /**
      * Get the authenticated User.
