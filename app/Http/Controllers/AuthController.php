@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Traits\ResponsApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -64,6 +65,15 @@ class AuthController extends Controller
         return response()->json(auth('api')->user());
     }
 
+    public function getfriend()
+    {
+        $phone = auth('api')->user();
+        $users = DB::table('users')
+                ->where('phone', '!=', $phone['phone'])
+                ->get();
+
+        return $users;
+    }
     /**
      * Log the user out (Invalidate the token).
      *

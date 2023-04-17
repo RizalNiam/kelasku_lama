@@ -24,6 +24,7 @@ Route::group([
     Route::post('logout', [AuthController::class,'logout']);
     Route::post('refresh', [AuthController::class,'refresh']);
     Route::post('getprofile', [AuthController::class,'getprofile']);
+    Route::post('getfriend', [AuthController::class,'getfriend']);
 });
 
 Route::post('auth/login', [AuthController::class,'login']);
