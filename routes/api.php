@@ -23,8 +23,8 @@ Route::group([
 ], function () {
     Route::post('logout', [AuthController::class,'logout']);
     Route::post('refresh', [AuthController::class,'refresh']);
-    Route::post('getprofile', [AuthController::class,'getprofile']);
-    Route::post('getfriend', [AuthController::class,'getfriend']);
+    Route::get('getprofile', [AuthController::class,'getprofile']);
+    Route::get('getfriend', [AuthController::class,'getfriend']);
     Route::post('upload', [AuthController::class,'upload']);
     Route::post('delete', [AuthController::class,'delete_image']);
 });
