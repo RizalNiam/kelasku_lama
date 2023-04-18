@@ -25,6 +25,8 @@ Route::group([
     Route::post('refresh', [AuthController::class,'refresh']);
     Route::post('getprofile', [AuthController::class,'getprofile']);
     Route::post('getfriend', [AuthController::class,'getfriend']);
+    Route::post('upload', [AuthController::class,'upload']);
+    Route::post('delete', [AuthController::class,'delete_image']);
 });
 
 Route::post('auth/login', [AuthController::class,'login']);

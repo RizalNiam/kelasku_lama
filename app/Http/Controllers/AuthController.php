@@ -67,12 +67,48 @@ class AuthController extends Controller
 
     public function getfriend()
     {
-        $phone = auth('api')->user();
+        $user = auth('api')->user();
         $users = DB::table('users')
-                ->where('phone', '!=', $phone['phone'])
+                ->where('phone', '!=', $user['phone'])
                 ->get();
 
         return $users;
+    }
+
+    public function upload(Request $request)
+    {   
+        $validateData = $request->validate([
+            'photo' => 'image|file|max:10240'
+        ]);
+
+        if (!$request->file('photo')){
+            return $this->responseValidation($request->errors(), 'upload gagal, silahkan coba kembali');
+        }
+        // hapus foto sebelumnya terlebih dulu, jika ada
+        $this->delete_image();
+            
+        $path = $request->file('photo')->store('profile-photo');
+
+        $user = auth('api')->user();
+
+        DB::table('users')
+              ->where('phone', $user->phone)
+              ->update(['photo' => $path]);
+
+        return $path;
+    }
+
+    public function delete_image()
+    {
+        $user = auth('api')->user();
+
+        $file = storage_path('/app/').$user['photo'];
+
+        if (file_exists($file)){
+            @unlink($file);
+        }
+
+        $user->delete;
     }
     /**
      * Log the user out (Invalidate the token).

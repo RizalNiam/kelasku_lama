@@ -19,6 +19,7 @@ class CreateUsersTable extends Migration
             $table->foreignId('school_id')->constrained('schools', 'id');
             $table->string('phone')->unique();
             $table->string('password');
+            $table->string('photo')->nullable();
             $table->timestamps();
         });
     }
