@@ -38,7 +38,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $input = $request->only('name', 'phone', 'school_id', 'password', 'confirm_password');
+        $input = $request->all();
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
@@ -75,6 +75,14 @@ class AuthController extends Controller
         return $users;
     }
 
+    public function getschools()
+    {
+        // cek apakah udah login
+        auth('api')->user();
+
+        return DB::table('schools')->get();
+    }
+
     public function upload(Request $request)
     {   
         $validateData = $request->validate([
@@ -109,6 +117,66 @@ class AuthController extends Controller
         }
 
         $user->delete;
+    }
+
+    public function editprofile(Request $request)
+    {
+        $input = $request->all();
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:255',
+            'school_id' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()){
+            return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
+        }
+
+        // get user primary key
+        $user = auth('api')->user();
+
+        DB::table('users')
+              ->where('phone', $user->phone)
+              ->update([
+                'name' => $request['name'],
+                'phone' => $request['phone'],
+                'school_id' => $request['school_id']
+                ]);
+
+        $user = DB::table('users')
+        ->select('name', 'phone', 'school_id')->get();
+
+        return $user;
+    }
+
+    public function editpassword(Request $request)
+    {
+        $input = $request->all();
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:8|max:255',
+            'confirm_password' => 'required|string|same:password|min:8|max:255',
+        ]);
+
+        if ($validator->fails()){
+            return $this->responseValidation($validator->errors(), 'edit gagal, silahkan coba kembali');
+        }
+
+        $request['password'] = bcrypt($request['password']);
+
+        // get user primary key
+        $user = auth('api')->user();
+
+        DB::table('users')
+              ->where('phone', $user->phone)
+              ->update([
+                'password' => $request['password'],
+                ]);
+
+        $user = DB::table('users')
+        ->select('name', 'phone', 'school_id')->get();
+
+        return response('edit password berhasil');
+
     }
     /**
      * Log the user out (Invalidate the token).

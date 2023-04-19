@@ -25,8 +25,11 @@ Route::group([
     Route::post('refresh', [AuthController::class,'refresh']);
     Route::get('getprofile', [AuthController::class,'getprofile']);
     Route::get('getfriend', [AuthController::class,'getfriend']);
+    Route::get('getschools', [AuthController::class,'getschools']);
     Route::post('upload', [AuthController::class,'upload']);
     Route::post('delete', [AuthController::class,'delete_image']);
+    Route::post('editprofile', [AuthController::class,'editprofile']);
+    Route::post('editpassword', [AuthController::class,'editpassword']);
 });
 
 Route::post('auth/login', [AuthController::class,'login']);
