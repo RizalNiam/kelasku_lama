@@ -53,7 +53,7 @@ class AuthController extends Controller
 
         $request['password'] = bcrypt($request['password']);
         $user = User::create($request->all());
-        return response()->json($input);
+        return $this->requestSuccess('Register Success');
     }
     /**
      * Get the authenticated User.
@@ -62,17 +62,18 @@ class AuthController extends Controller
      */
     public function getprofile()
     {
-        return response()->json(auth('api')->user());
+        response()->json(auth('api')->user());
+        return $this->requestSuccessData('Get Profile Success', auth("api")->user());
     }
 
     public function getfriend()
     {
         $user = auth('api')->user();
         $users = DB::table('users')
-                ->where('phone', '!=', $user['phone'])
+                ->where('id', '!=', $user->id)
                 ->get();
 
-        return $users;
+        return $this->requestSuccessData('Get Friend Success', $users);
     }
 
     public function getschools()
@@ -80,7 +81,9 @@ class AuthController extends Controller
         // cek apakah udah login
         auth('api')->user();
 
-        return DB::table('schools')->get();
+        $schools = DB::table('schools')->get();
+
+        return $this->requestSuccessData('Get Schools Success', $schools);
     }
 
     public function upload(Request $request)
@@ -103,7 +106,7 @@ class AuthController extends Controller
               ->where('phone', $user->phone)
               ->update(['photo' => $path]);
 
-        return $path;
+        return $this->requestSuccessData('Upload Success', $path);
     }
 
     public function delete_image()
@@ -146,7 +149,7 @@ class AuthController extends Controller
         $user = DB::table('users')
         ->select('name', 'phone', 'school_id')->get();
 
-        return $user;
+        return $this->requestSuccess('Edit Profile Success');
     }
 
     public function editpassword(Request $request)
@@ -175,7 +178,7 @@ class AuthController extends Controller
         $user = DB::table('users')
         ->select('name', 'phone', 'school_id')->get();
 
-        return response('edit password berhasil');
+        return $this->requestSuccess('Edit Password Success');
 
     }
     /**
