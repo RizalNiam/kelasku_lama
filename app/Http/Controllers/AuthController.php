@@ -28,7 +28,7 @@ class AuthController extends Controller
     public function login()
     {
         $input = request(['phone', 'password']);
-        $deivce_token = request(['device_token']);
+        $device_token = request('device_token');
 
         if (! $token = auth("api")->attempt($input)) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -39,7 +39,7 @@ class AuthController extends Controller
         DB::table('users')
               ->where('id', '=' ,$user->id)
               ->update([
-                'device_token' => $deivce_token,
+                'device_token' => $device_token,
                 ]);
 
         return $this->loginSuccess(auth("api")->user(), $token);
