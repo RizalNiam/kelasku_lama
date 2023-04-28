@@ -42,7 +42,11 @@ class AuthController extends Controller
                 'device_token' => $device_token,
                 ]);
 
-        return $this->loginSuccess(auth("api")->user(), $token);
+                $lastestData = DB::table('users')
+                ->select()->where('id', '=' ,$user->id)
+                ->get();
+
+        return $this->loginSuccess($lastestData, $token);
     }
 
     public function register(Request $request)
@@ -71,7 +75,6 @@ class AuthController extends Controller
      */
     public function getprofile()
     {
-        response()->json(auth('api')->user());
         return $this->requestSuccessData('Get Profile Success', auth("api")->user());
     }
 
