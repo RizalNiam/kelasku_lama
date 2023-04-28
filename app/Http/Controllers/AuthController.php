@@ -27,11 +27,20 @@ class AuthController extends Controller
      */
     public function login()
     {
-        $credentials = request(['phone', 'password']);
+        $input = request(['phone', 'password']);
+        $deivce_token = request(['device_token']);
 
-        if (! $token = auth("api")->attempt($credentials)) {
+        if (! $token = auth("api")->attempt($input)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        $user = auth('api')->user();
+
+        DB::table('users')
+              ->where('id', '=' ,$user->id)
+              ->update([
+                'device_token' => $deivce_token,
+                ]);
 
         return $this->loginSuccess(auth("api")->user(), $token);
     }

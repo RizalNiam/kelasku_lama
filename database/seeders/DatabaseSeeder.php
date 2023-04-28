@@ -19,12 +19,5 @@ class DatabaseSeeder extends Seeder
             "school_name"=>"SMK Hidayah"
         ]);
 
-        User::factory(10)->create();
-        User::create([
-            "name"=>"AAA",
-            "phone"=>"085123123",
-            "school_id"=>1,
-            "password"=> bcrypt("password")
-        ]);
     }
 }
