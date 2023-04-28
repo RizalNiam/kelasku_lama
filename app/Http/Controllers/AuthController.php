@@ -46,7 +46,7 @@ class AuthController extends Controller
                 ->select()->where('id', '=' ,$user->id)
                 ->get();
 
-        return $this->loginSuccess($lastestData, $token);
+        return $this->loginSuccess($user, $token);
     }
 
     public function register(Request $request)
@@ -66,7 +66,13 @@ class AuthController extends Controller
 
         $request['password'] = bcrypt($request['password']);
         $user = User::create($request->all());
-        return $this->requestSuccess('Register Success');
+
+        /// get new record data
+        $newData = DB::table('users')
+                ->select()->where('id', '=' ,$user->id)
+                ->get();
+
+        return $this->requestSuccessData('Register Success', $newData);
     }
     /**
      * Get the authenticated User.
@@ -81,11 +87,8 @@ class AuthController extends Controller
     public function getfriend()
     {
         $user = auth('api')->user();
-        $users = DB::table('users')
-                ->where('id', '!=', $user->id)
-                ->get();
 
-        return $this->requestSuccessData('Get Friend Success', $users);
+        return $this->requestSuccessData('Get user Success', $users);
     }
 
     public function getschools()
