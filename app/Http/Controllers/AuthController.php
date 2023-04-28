@@ -90,8 +90,6 @@ class AuthController extends Controller
 
     public function getschools()
     {
-        // cek apakah udah login
-        auth('api')->user();
 
         $schools = DB::table('schools')->get();
 
