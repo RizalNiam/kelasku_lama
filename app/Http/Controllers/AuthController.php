@@ -51,7 +51,6 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $input = $request->all();
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
@@ -60,6 +59,13 @@ class AuthController extends Controller
             'confirm_password' => 'required|string|same:password|min:8|max:255',
         ]);
 
+        $user = User::where('phone', $request->phone)->first();
+
+        if ($user) {
+            // Jika nomor telepon sudah terdaftar, kirim response dengan pesan error
+            return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
+        }
+
         if ($validator->fails()){
             return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
         }
@@ -67,12 +73,8 @@ class AuthController extends Controller
         $request['password'] = bcrypt($request['password']);
         $user = User::create($request->all());
 
-        /// get new record data
-        $newData = DB::table('users')
-                ->select()->where('id', '=' ,$user->id)
-                ->get();
 
-        return $this->requestSuccessData('Register Success', $newData);
+        return $this->requestSuccess('Register Success');
     }
     /**
      * Get the authenticated User.
@@ -193,6 +195,11 @@ class AuthController extends Controller
 
         return $this->requestSuccess('Edit Password Success');
 
+    }
+
+    public function cekNomorUnik($nomor)
+    {
+        
     }
     /**
      * Log the user out (Invalidate the token).
