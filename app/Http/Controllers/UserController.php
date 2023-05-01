@@ -8,9 +8,13 @@ use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\ResponsApi;
+
 
 class UserController extends Controller 
 {
+    use ResponsApi;
+
     public function register(Request $request)
     {  
         $input = $request->all();
@@ -22,19 +26,21 @@ class UserController extends Controller
             'confirm_password' => 'required|string|same:password|min:8|max:255',
         ]);
 
-        // if ($validator->fails()){
-        //     return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
-        // }
+        $user = User::where('phone', $request->phone)->first();
+
+        if ($user) {
+            // Jika nomor telepon sudah terdaftar, kirim response dengan pesan error
+            return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
+        }
+
+        if ($validator->fails()){
+            return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
+        }
 
         $request['password'] = bcrypt($request['password']);
         $user = User::create($request->all());
 
-        /// get new record data
-        $newData = DB::table('users')
-                ->select()->where('id', '=' ,$user->id)
-                ->get();
-
-        // return $this->requestSuccessData('Register Success', $newData);
+        return redirect()->route('index');
     }
 
     public function sendNotification($id)
