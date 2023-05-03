@@ -42,10 +42,6 @@ class AuthController extends Controller
                 'device_token' => $device_token,
                 ]);
 
-                $lastestData = DB::table('users')
-                ->select()->where('id', '=' ,$user->id)
-                ->get();
-
         return $this->loginSuccess($user, $token);
     }
 
@@ -87,10 +83,20 @@ class AuthController extends Controller
     }
 
     public function getfriend()
-    {
-        $user = auth('api')->user();
+    {   
+        $user = auth("api")->user();
 
-        return $this->requestSuccessData('Get user Success', $users);
+        $data = DB::table('users')
+        ->where('id', '!=', $user->id)
+        ->get();
+
+        $friends = (string) $data;
+        $friends = str_replace('[','',$friends);
+        $friends = str_replace(']','',$friends);
+
+        // var_dump($friends);
+
+        return '{ data : ' . $friends . '}';
     }
 
     public function getschools()
@@ -169,38 +175,31 @@ class AuthController extends Controller
 
     public function editpassword(Request $request)
     {
-        $input = $request->all();
+        $input = request(['old_password']);   
+
         $validator = Validator::make($request->all(), [
-            'password' => 'required|string|min:8|max:255',
-            'confirm_password' => 'required|string|same:password|min:8|max:255',
+            'new_password' => 'required|string|min:8|max:255',
         ]);
 
         if ($validator->fails()){
-            return $this->responseValidation($validator->errors(), 'edit gagal, silahkan coba kembali');
+            return $this->responseValidation($validator->errors(), 'passwor baru tidak valid, silahkan coba kembali');
         }
 
-        $request['password'] = bcrypt($request['password']);
+        $request['new_password'] = bcrypt($request['new_password']);
 
         // get user primary key
         $user = auth('api')->user();
 
         DB::table('users')
-              ->where('phone', $user->phone)
+              ->where('id', $user->id)
               ->update([
-                'password' => $request['password'],
+                'password' => $request['new_password'],
                 ]);
-
-        $user = DB::table('users')
-        ->select('name', 'phone', 'school_id')->get();
 
         return $this->requestSuccess('Edit Password Success');
 
     }
 
-    public function cekNomorUnik($nomor)
-    {
-        
-    }
     /**
      * Log the user out (Invalidate the token).
      *
