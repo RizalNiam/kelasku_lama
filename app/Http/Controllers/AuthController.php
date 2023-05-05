@@ -31,7 +31,7 @@ class AuthController extends Controller
         $device_token = request('device_token');
 
         if (! $token = auth("api")->attempt($input)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json(['error' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
         }
 
         $user = auth('api')->user();
@@ -90,13 +90,7 @@ class AuthController extends Controller
         ->where('id', '!=', $user->id)
         ->get();
 
-        $friends = (string) $data;
-        $friends = str_replace('[','',$friends);
-        $friends = str_replace(']','',$friends);
-
-        // var_dump($friends);
-
-        return '{ data : ' . $friends . '}';
+        return $this->requestSuccessData('Get Profile Success', $data);
     }
 
     public function getschools()
@@ -109,7 +103,7 @@ class AuthController extends Controller
 
     public function upload(Request $request)
     {   
-        $validateData = $request->validate([
+        $request->validate([
             'photo' => 'image|file|max:10240'
         ]);
 
@@ -145,30 +139,40 @@ class AuthController extends Controller
 
     public function editprofile(Request $request)
     {
-        $input = $request->all();
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
             'school_id' => 'required|string|max:255',
+            'photo' => 'image|file|max:10240'
         ]);
 
         if ($validator->fails()){
             return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
         }
 
+        $user = User::where('phone', $request->phone)->first();
+
+        if ($user) {
+            // Jika nomor telepon sudah terdaftar, kirim response dengan pesan error
+            return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
+        }
+
+        // hapus foto sebelumnya terlebih dulu, jika ada
+        $this->delete_image();
+            
+        $path = $request->file('photo')->store('profile-photo');
+
         // get user primary key
         $user = auth('api')->user();
 
         DB::table('users')
-              ->where('phone', $user->phone)
+              ->where('id', $user->id)
               ->update([
                 'name' => $request['name'],
                 'phone' => $request['phone'],
-                'school_id' => $request['school_id']
+                'school_id' => $request['school_id'],
+                'photo' => $path
                 ]);
-
-        $user = DB::table('users')
-        ->select('name', 'phone', 'school_id')->get();
 
         return $this->requestSuccess('Edit Profile Success');
     }
