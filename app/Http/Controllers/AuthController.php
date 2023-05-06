@@ -31,7 +31,7 @@ class AuthController extends Controller
         $device_token = request('device_token');
 
         if (! $token = auth("api")->attempt($input)) {
-            return response()->json(['error' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
+            return response()->json(['massage' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
         }
 
         $user = auth('api')->user();
@@ -87,10 +87,11 @@ class AuthController extends Controller
         $user = auth("api")->user();
 
         $data = DB::table('users')
-        ->where('id', '!=', $user->id)
-        ->get();
+            ->join('schools', 'users.school_id', '=', 'schools.id')
+            ->where('users.id', '!=', $user->id)
+            ->get();
 
-        return $this->requestSuccessData('Get Profile Success', $data);
+        return $this->requestSuccessData('Get Friends Success', $data);
     }
 
     public function getschools()
