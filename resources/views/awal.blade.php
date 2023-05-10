@@ -3,9 +3,8 @@
     <body>
         <img src="buku.png" width="100" height="100">
 
-        <h2>Aplikasi Kelasku</h2>
-        <h4>Information Architecture</h4>
+        <h2>Dashboard Admin</h2>
 
-        <a href="login">Masuk?</a>
+        <a href="login">Masuk</a>
     </body>
 </html>

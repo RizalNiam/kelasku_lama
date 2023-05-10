@@ -4,7 +4,7 @@
    </head>
     <body>
         <form action="login-proses.php" method="post">
-            <label class="form-label">Nomor Telepon</label><br>
+            <label class="form-label">Username</label><br>
             <input class="form-control" type="text"><br>
             <label class="form-label">Password</label><br>
             <input class="form-control" type="password"><br><br>

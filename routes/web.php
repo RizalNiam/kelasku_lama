@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,4 +21,4 @@ Route::get('/', function () {
 Route::get('index', function () {return view('awal');});
 Route::get('login', function () {return view('login');});
 Route::get('daftar', function () {return view('daftar');});
-Route::post('prosesdaftar', [UserController::class,'register']);
+Route::post('prosesdaftar', [AdminController::class,'register']);

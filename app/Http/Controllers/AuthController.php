@@ -31,10 +31,18 @@ class AuthController extends Controller
         $device_token = request('device_token');
 
         if (! $token = auth("api")->attempt($input)) {
-            return response()->json(['massage' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
+            return response()->json(['message' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
         }
 
-        $user = auth('api')->user();
+        $user = auth("api")->user();
+
+        $data = DB::table('users')
+                ->select('id', 'name', 'phone', 'photo', 'created_at', 'updated_at')
+                ->where('id', '=' ,$user->id)
+                ->get();
+	$data2 = (string) $data;
+	$data2 = str_replace('[','',$data2);
+	$data2 = str_replace(']','',$data2);
 
         DB::table('users')
               ->where('id', '=' ,$user->id)
@@ -42,7 +50,12 @@ class AuthController extends Controller
                 'device_token' => $device_token,
                 ]);
 
-        return $this->loginSuccess($user, $token);
+        return '{ 
+"status": 200,
+ "message": "Login Success" ,
+ "data": ' . $data2 .' ,
+ "token" = ' . $token . '
+}';
     }
 
     public function register(Request $request)
@@ -79,7 +92,26 @@ class AuthController extends Controller
      */
     public function getprofile()
     {
-        return $this->requestSuccessData('Get Profile Success', auth("api")->user());
+        $user = auth("api")->user();
+        
+        $data = DB::table('users')
+        ->select('users.id', 'users.name', 'users.school_id', 'schools.school_name','users.phone', 'users.photo', 'users.created_at', 'users.updated_at')
+	->join('schools', 'users.school_id', '=', 'schools.id')
+        ->where('users.id', '=' ,$user->id)
+        ->get();
+
+	$data2 = (string) $data;
+	$data2 = str_replace('[','',$data2);
+	$data2 = str_replace(']','',$data2);
+
+
+        return '{
+ "status": 200,
+ 	"message": "Get Profile Success" ,
+ 	"data": 
+	' . $data2 . '
+}';
+
     }
 
     public function getfriend()
@@ -91,9 +123,8 @@ class AuthController extends Controller
             ->where('users.id', '!=', $user->id)
             ->get();
 
-        return $this->requestSuccessData('Get Friends Success', $data);
+        return $this->requestSuccessData('Get Friends Success', $data);    
     }
-
     public function getschools()
     {
 
@@ -147,24 +178,27 @@ class AuthController extends Controller
             'photo' => 'image|file|max:10240'
         ]);
 
+        // get user's phone number
+        $user = auth('api')->user();
+
         if ($validator->fails()){
-            return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
+                return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
         }
 
         $user = User::where('phone', $request->phone)->first();
 
         if ($user) {
-            // Jika nomor telepon sudah terdaftar, kirim response dengan pesan error
-            return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
+                // mengecek apakh nomor sama seperti sebelumnya
+            if(! $request->phone == $user->phone){
+                // Jika nomor telepon sudah terdaftar, kirim response dengan pesan error
+                return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
+            }
         }
 
         // hapus foto sebelumnya terlebih dulu, jika ada
         $this->delete_image();
             
         $path = $request->file('photo')->store('profile-photo');
-
-        // get user primary key
-        $user = auth('api')->user();
 
         DB::table('users')
               ->where('id', $user->id)
