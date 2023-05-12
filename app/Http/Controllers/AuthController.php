@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResources;
 use App\Models\User;
 use App\Traits\ResponsApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -94,23 +96,14 @@ class AuthController extends Controller
     {
         $user = auth("api")->user();
         
-        $data = DB::table('users')
-        ->select('users.id', 'users.name', 'users.school_id', 'schools.school_name','users.phone', 'users.photo', 'users.created_at', 'users.updated_at')
-	->join('schools', 'users.school_id', '=', 'schools.id')
+        $rawData = DB::table('users')
+        ->select('users.id', 'users.name', 'users.school_id', 'schools.school_name','users.phone', 'users.created_at', 'users.updated_at')
+	    ->join('schools', 'users.school_id', '=', 'schools.id')
         ->where('users.id', '=' ,$user->id)
         ->get();
 
-	$data2 = (string) $data;
-	$data2 = str_replace('[','',$data2);
-	$data2 = str_replace(']','',$data2);
-
-
-        return '{
- "status": 200,
- 	"message": "Get Profile Success" ,
- 	"data": 
-	' . $data2 . '
-}';
+        $data = UserResources::collection($rawData);
+        return $this->requestSuccessData('ok', $data);
 
     }
 
@@ -160,7 +153,7 @@ class AuthController extends Controller
     {
         $user = auth('api')->user();
 
-        $file = storage_path('/app/').$user['photo'];
+        $file = storage_path('/app/public/public').$user->photo;
 
         if (file_exists($file)){
             @unlink($file);
@@ -173,7 +166,6 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
             'school_id' => 'required|string|max:255',
             'photo' => 'image|file|max:10240'
         ]);
@@ -185,31 +177,31 @@ class AuthController extends Controller
                 return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
         }
 
-        $user = User::where('phone', $request->phone)->first();
-
-        if ($user) {
-                // mengecek apakh nomor sama seperti sebelumnya
-            if(! $request->phone == $user->phone){
-                // Jika nomor telepon sudah terdaftar, kirim response dengan pesan error
-                return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
-            }
-        }
-
         // hapus foto sebelumnya terlebih dulu, jika ada
         $this->delete_image();
             
-        $path = $request->file('photo')->store('profile-photo');
-
+        $path = $request->file('photo')->store('public','public');
+	$link = "https://magang.crocodic.net/ki/Afifun/kelasku/storage/app/public/";
+	$link .= $path;	
         DB::table('users')
               ->where('id', $user->id)
               ->update([
                 'name' => $request['name'],
-                'phone' => $request['phone'],
                 'school_id' => $request['school_id'],
-                'photo' => $path
+                'photo' => $link
                 ]);
 
         return $this->requestSuccess('Edit Profile Success');
+    }
+
+    function append_string ($str1, $str2) {
+      
+        // Using Concatenation assignment
+        // operator (.=)
+        $str1 .=$str2;
+          
+        // Returning the result 
+        return $str1;
     }
 
     public function editpassword(Request $request)
