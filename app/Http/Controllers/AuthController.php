@@ -20,7 +20,7 @@ class AuthController extends Controller
      *
      * @return void
      */
-    
+
 
     /**
      * Get a JWT via given credentials.
@@ -32,32 +32,19 @@ class AuthController extends Controller
         $input = request(['phone', 'password']);
         $device_token = request('device_token');
 
-        if (! $token = auth("api")->attempt($input)) {
+        if (!$token = auth("api")->attempt($input)) {
             return response()->json(['message' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
         }
 
         $user = auth("api")->user();
 
         $data = DB::table('users')
-                ->select('id', 'name', 'phone', 'photo', 'created_at', 'updated_at')
-                ->where('id', '=' ,$user->id)
-                ->get();
-	$data2 = (string) $data;
-	$data2 = str_replace('[','',$data2);
-	$data2 = str_replace(']','',$data2);
+            ->join('schools', 'users.school_id', '=', 'schools.id')
+            ->select('users.id', 'users.name', 'users.phone', 'users.photo', 'users.created_at', 'users.updated_at', 'schools.id as school_id', 'schools.school_name as school_name')
+            ->where('users.id', '=', $user->id)
+            ->get();
 
-        DB::table('users')
-              ->where('id', '=' ,$user->id)
-              ->update([
-                'device_token' => $device_token,
-                ]);
-
-        return '{ 
-"status": 200,
- "message": "Login Success" ,
- "data": ' . $data2 .' ,
- "token" = ' . $token . '
-}';
+        return $this->loginSuccess($data[0], $token);
     }
 
     public function register(Request $request)
@@ -77,7 +64,7 @@ class AuthController extends Controller
             return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
         }
 
-        if ($validator->fails()){
+        if ($validator->fails()) {
             return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
         }
 
@@ -95,20 +82,17 @@ class AuthController extends Controller
     public function getprofile()
     {
         $user = auth("api")->user();
-        
+
         $rawData = DB::table('users')
-        ->select('users.id', 'users.name', 'users.school_id', 'schools.school_name','users.phone', 'users.created_at', 'users.updated_at')
-	    ->join('schools', 'users.school_id', '=', 'schools.id')
-        ->where('users.id', '=' ,$user->id)
-        ->get();
-
-        $data = UserResources::collection($rawData);
-        return $this->requestSuccessData('ok', $data);
-
+            ->join('schools', 'users.school_id', '=', 'schools.id')
+            ->select('users.id', 'users.name', 'users.photo', 'users.school_id', 'schools.school_name', 'users.phone', 'users.created_at', 'users.updated_at', 'schools.school_name as school_name')
+            ->where('users.id', '=', $user->id)
+            ->first(); //jangan pake get kalo get nanti dapet nya array kalo semisal first dia object dan khusus satu data 
+        return $this->requestSuccessData('Success!', $rawData);
     }
 
     public function getfriend()
-    {   
+    {
         $user = auth("api")->user();
 
         $data = DB::table('users')
@@ -116,7 +100,7 @@ class AuthController extends Controller
             ->where('users.id', '!=', $user->id)
             ->get();
 
-        return $this->requestSuccessData('Get Friends Success', $data);    
+        return $this->requestSuccessData('Get Friends Success', $data);
     }
     public function getschools()
     {
@@ -127,24 +111,24 @@ class AuthController extends Controller
     }
 
     public function upload(Request $request)
-    {   
+    {
         $request->validate([
             'photo' => 'image|file|max:10240'
         ]);
 
-        if (!$request->file('photo')){
+        if (!$request->file('photo')) {
             return $this->responseValidation($request->errors(), 'upload gagal, silahkan coba kembali');
         }
         // hapus foto sebelumnya terlebih dulu, jika ada
         $this->delete_image();
-            
+
         $path = $request->file('photo')->store('profile-photo');
 
         $user = auth('api')->user();
 
         DB::table('users')
-              ->where('phone', $user->phone)
-              ->update(['photo' => $path]);
+            ->where('phone', $user->phone)
+            ->update(['photo' => $path]);
 
         return $this->requestSuccessData('Upload Success', $path);
     }
@@ -153,9 +137,9 @@ class AuthController extends Controller
     {
         $user = auth('api')->user();
 
-        $file = storage_path('/app/public/public').$user->photo;
+        $file = storage_path('/app/public/public') . $user->photo;
 
-        if (file_exists($file)){
+        if (file_exists($file)) {
             @unlink($file);
         }
 
@@ -173,46 +157,47 @@ class AuthController extends Controller
         // get user's phone number
         $user = auth('api')->user();
 
-        if ($validator->fails()){
-                return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
+        if ($validator->fails()) {
+            return $this->responseValidation($validator->errors(), 'edit data gagal, silahkan coba kembali');
         }
 
         // hapus foto sebelumnya terlebih dulu, jika ada
         $this->delete_image();
-            
-        $path = $request->file('photo')->store('public','public');
-	$link = "https://magang.crocodic.net/ki/Afifun/kelasku/storage/app/public/";
-	$link .= $path;	
+
+        $path = $request->file('photo')->store('public', 'public');
+        $link = "https://magang.crocodic.net/ki/Afifun/kelasku/storage/app/public/";
+        $link .= $path;
         DB::table('users')
-              ->where('id', $user->id)
-              ->update([
+            ->where('id', $user->id)
+            ->update([
                 'name' => $request['name'],
                 'school_id' => $request['school_id'],
                 'photo' => $link
-                ]);
+            ]);
 
         return $this->requestSuccess('Edit Profile Success');
     }
 
-    function append_string ($str1, $str2) {
-      
+    function append_string($str1, $str2)
+    {
+
         // Using Concatenation assignment
         // operator (.=)
-        $str1 .=$str2;
-          
+        $str1 .= $str2;
+
         // Returning the result 
         return $str1;
     }
 
     public function editpassword(Request $request)
     {
-        $input = request(['old_password']);   
+        $input = request(['old_password']);
 
         $validator = Validator::make($request->all(), [
             'new_password' => 'required|string|min:8|max:255',
         ]);
 
-        if ($validator->fails()){
+        if ($validator->fails()) {
             return $this->responseValidation($validator->errors(), 'passwor baru tidak valid, silahkan coba kembali');
         }
 
@@ -222,13 +207,12 @@ class AuthController extends Controller
         $user = auth('api')->user();
 
         DB::table('users')
-              ->where('id', $user->id)
-              ->update([
+            ->where('id', $user->id)
+            ->update([
                 'password' => $request['new_password'],
-                ]);
+            ]);
 
         return $this->requestSuccess('Edit Password Success');
-
     }
 
     /**

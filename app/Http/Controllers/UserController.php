@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Validator;
 use App\Traits\ResponsApi;
 
 
-class UserController extends Controller 
+class UserController extends Controller
 {
     use ResponsApi;
 
     public function register(Request $request)
-    {  
+    {
         $input = $request->all();
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -33,7 +33,7 @@ class UserController extends Controller
             return $this->badRequest('Nomor telepon sudah terdaftar. Silahkan gunakan nomor telepon yang lain');
         }
 
-        if ($validator->fails()){
+        if ($validator->fails()) {
             return $this->responseValidation($validator->errors(), 'register gagal, silahkan coba kembali');
         }
 
@@ -45,16 +45,15 @@ class UserController extends Controller
 
     public function sendNotification($id)
     {
-       // get a user to get the fcm_token that already sent from mobile apps 
-       $user = User::findOrFail($id);
+        // get a user to get the fcm_token that already sent from mobile apps 
+        $user = User::findOrFail($id);
 
-       FCMService::send(
-          $user->fcm_token,
-          [
-              'title' => 'Hello',
-              'body' => 'Good Morning',
-          ]
-      );
-
+        FCMService::send(
+            $user->fcm_token,
+            [
+                'title' => 'Hello',
+                'body' => 'Good Morning',
+            ]
+        );
     }
 }
