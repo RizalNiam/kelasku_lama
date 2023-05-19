@@ -175,7 +175,13 @@ class AuthController extends Controller
                 'photo' => $link
             ]);
 
-        return $this->requestSuccess('Edit Profile Success');
+        $rawData = DB::table('users')
+        ->join('schools', 'users.school_id', '=', 'schools.id')
+        ->select('users.id', 'users.name', 'users.photo', 'users.school_id', 'schools.school_name', 'users.phone', 'users.created_at', 'users.updated_at', 'schools.school_name as school_name')
+        ->where('users.id', '=', $user->id)
+        ->first();
+
+        return $this->requestSuccessD('Edit Profile Success', $rawData);
     }
 
     function append_string($str1, $str2)

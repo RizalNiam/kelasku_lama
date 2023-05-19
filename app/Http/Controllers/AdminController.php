@@ -14,6 +14,17 @@ class AdminController extends Controller
 {
     use ResponsApi;
 
+    public function login()
+    {
+        $input = request(['username', 'password']);
+
+        if (!$token = auth("api")->attempt($input)) {
+            return response()->json(['message' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
+        }
+
+        redirect()->route('home');
+    }
+
     public function register(Request $request)
     {  
         $input = $request->all();
@@ -36,7 +47,5 @@ class AdminController extends Controller
 
         $request['password'] = bcrypt($request['password']);
         $user = Admin::create($request->all());
-
-        return redirect()->route('index');
     }
 }

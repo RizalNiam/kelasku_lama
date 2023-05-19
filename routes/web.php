@@ -20,5 +20,6 @@ Route::get('/', function () {
 
 Route::get('index', function () {return view('awal');});
 Route::get('login', function () {return view('login');});
+Route::post('admin/login-proses', function () {return view('dashboard');});
 Route::get('daftar', function () {return view('daftar');});
 Route::post('prosesdaftar', [AdminController::class,'register']);
