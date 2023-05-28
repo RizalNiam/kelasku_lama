@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\UserResources;
 use App\Models\User;
 use App\Traits\ResponsApi;
 use Illuminate\Http\Request;
@@ -27,17 +26,25 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
+    public function login(Request $request)
     {
         $input = request(['phone', 'password']);
         $device_token = request('device_token');
+
+        
+
+        var_dump($request);
 
         if (!$token = auth("api")->attempt($input)) {
             return response()->json(['message' => 'Nomor Telepon atau Kata Sansi yang anda masukan tidak valid, silahkan coba lagi'], 401);
         }
 
         $user = auth("api")->user();
-
+    
+        DB::table('users')
+              ->where('id', $user->id)
+              ->update(['device_token' => $device_token]);
+    
         $data = DB::table('users')
             ->join('schools', 'users.school_id', '=', 'schools.id')
             ->select('users.id', 'users.name', 'users.phone', 'users.photo', 'users.created_at', 'users.updated_at', 'schools.id as school_id', 'schools.school_name as school_name')
@@ -164,16 +171,27 @@ class AuthController extends Controller
         // hapus foto sebelumnya terlebih dulu, jika ada
         $this->delete_image();
 
-        $path = $request->file('photo')->store('public', 'public');
-        $link = "https://magang.crocodic.net/ki/Afifun/kelasku/storage/app/public/";
-        $link .= $path;
-        DB::table('users')
+        if($request['photo'] != null){
+            $path = $request->file('photo')->store('public', 'public');
+            $link = "https://magang.crocodic.net/ki/Afifun/kelasku/storage/app/public/";
+            $link .= $path;
+
+            DB::table('users')
             ->where('id', $user->id)
             ->update([
                 'name' => $request['name'],
                 'school_id' => $request['school_id'],
                 'photo' => $link
             ]);
+        } else{
+            DB::table('users')
+            ->where('id', $user->id)
+            ->update([
+                'name' => $request['name'],
+                'school_id' => $request['school_id'],
+                'photo' => null
+            ]);
+        } 
 
         $rawData = DB::table('users')
         ->join('schools', 'users.school_id', '=', 'schools.id')
@@ -181,7 +199,7 @@ class AuthController extends Controller
         ->where('users.id', '=', $user->id)
         ->first();
 
-        return $this->requestSuccessD('Edit Profile Success', $rawData);
+        return $this->requestSuccessData('Edit Profile Success', $rawData);
     }
 
     function append_string($str1, $str2)
@@ -196,21 +214,27 @@ class AuthController extends Controller
     }
 
     public function editpassword(Request $request)
-    {
-        $input = request(['old_password']);
+    {	
+	    $user = auth('api')->user();
+
+        $input = [
+            'phone' => $user->phone, 
+            'password' => request('old_password')
+        ];
+
+        if (!auth("api")->attempt($input)) {
+            return response()->json(['message' => 'Ubah kata sandi gagal, kata sandi lama tidak valid'], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'new_password' => 'required|string|min:8|max:255',
         ]);
 
         if ($validator->fails()) {
-            return $this->responseValidation($validator->errors(), 'passwor baru tidak valid, silahkan coba kembali');
+            return $this->responseValidation($validator->errors(), 'password baru tidak valid, silahkan coba kembali');
         }
 
-        $request['new_password'] = bcrypt($request['new_password']);
-
-        // get user primary key
-        $user = auth('api')->user();
+        $request['new_password'] = bcrypt($request['new_password']);        
 
         DB::table('users')
             ->where('id', $user->id)
@@ -259,3 +283,4 @@ class AuthController extends Controller
         ]);
     }
 }
+       

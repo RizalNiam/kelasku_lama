@@ -29,7 +29,7 @@ Route::group([
     Route::post('delete', [AuthController::class,'delete_image']);
     Route::post('editprofile', [AuthController::class,'editprofile']);
     Route::post('editpassword', [AuthController::class,'editpassword']);
-    Route::post('sendNotification/{id}', [App\Http\Controllers\UserController::class,'sendNotification']);
+    Route::post('sendNotification', [App\Http\Controllers\UserController::class,'sendNotification']);
 });
 
 Route::post('auth/login', [AuthController::class,'login']);
